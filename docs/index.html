@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNTE – Smart Notification Throttling Engine</title>
+  <meta name="description" content="A C/WebAssembly project demonstrating Ring Buffers, Max-Heaps, Hash Tables, Greedy Algorithms, and Branch &amp; Bound optimization for intelligent notification filtering.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <h2>Loading WASM Engine…</h2>
+      <p>Compiling C to your browser</p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" style="display:none;">
+
+    <!-- Header -->
+    <header id="header">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-icon">⚡</span>
+          <div>
+            <h1>SNTE</h1>
+            <p class="subtitle">Smart Notification Throttling Engine — <span class="tag">C + WebAssembly</span></p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="btn-reset" class="btn btn-ghost" title="Reset Engine">↺ Reset</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <section id="stats-bar">
+      <div class="stat" id="stat-shown">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Shown</span>
+      </div>
+      <div class="stat" id="stat-delayed">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Delayed</span>
+      </div>
+      <div class="stat" id="stat-suppressed">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Suppressed</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat" id="stat-ring">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Ring Buffer</span>
+      </div>
+      <div class="stat" id="stat-heap">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Max-Heap</span>
+      </div>
+      <div class="stat" id="stat-hash">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Hash Table</span>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <main id="main-content">
+
+      <!-- Left: Controls -->
+      <section class="panel" id="controls-panel">
+        <h2 class="panel-title">Send Notification</h2>
+
+        <form id="notif-form" autocomplete="off">
+          <label for="input-app">Application</label>
+          <select id="input-app">
+            <option value="Slack">💬 Slack</option>
+            <option value="Email">✉️ Email</option>
+            <option value="Instagram">📸 Instagram</option>
+            <option value="WhatsApp">📱 WhatsApp</option>
+            <option value="System">⚠️ System Alert</option>
+            <option value="Jira">🎫 Jira</option>
+            <option value="GitHub">🐙 GitHub</option>
+            <option value="Promo">🏷️ Promotions</option>
+            <option value="News">📰 News</option>
+            <option value="Calendar">📅 Calendar</option>
+          </select>
+
+          <label for="input-priority">Priority: <span id="pri-display">5</span></label>
+          <input type="range" id="input-priority" min="1" max="10" value="5">
+
+          <label for="input-category">Category</label>
+          <select id="input-category">
+            <option value="0">Social</option>
+            <option value="1">Work</option>
+            <option value="2">System</option>
+            <option value="3">Promo</option>
+          </select>
+
+          <button type="submit" class="btn btn-primary" id="btn-send">Send →</button>
+        </form>
+
+        <div class="controls-divider"></div>
+
+        <h2 class="panel-title">Simulation</h2>
+        <button class="btn btn-accent" id="btn-burst">🔥 Simulate Burst (12)</button>
+        <button class="btn btn-secondary" id="btn-bnb">🌿 Run Branch &amp; Bound</button>
+
+        <div id="bnb-result" class="bnb-result" style="display:none;">
+          <h3>B&B Optimization Result</h3>
+          <div id="bnb-content"></div>
+        </div>
+      </section>
+
+      <!-- Right: Feed -->
+      <section class="panel" id="feed-panel">
+        <h2 class="panel-title">Notification Feed</h2>
+        <div id="feed" class="feed-list">
+          <div class="feed-empty">No notifications yet. Send one or simulate a burst!</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Data Structures Viewer -->
+    <section id="structures">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tab-ring">Ring Buffer</button>
+        <button class="tab-btn" data-tab="tab-heap">Max-Heap</button>
+        <button class="tab-btn" data-tab="tab-hash">Hash Table</button>
+      </div>
+
+      <div class="tab-content" id="tab-ring">
+        <div class="ds-header">
+          <h3>Ring Buffer <span class="ds-complexity">O(1) enqueue/dequeue</span></h3>
+          <span class="ds-info">Circular queue — capacity 64</span>
+        </div>
+        <div id="ring-view" class="ds-view">
+          <p class="ds-empty">Empty</p>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-heap" style="display:none;">
+        <div class="ds-header">
+          <h3>Max-Heap <span class="ds-complexity">O(log n) insert/extract</span></h3>
+          <span class="ds-info">Array-based binary heap — capacity 64</span>
+        </div>
+        <div id="heap-view" class="ds-view">
+          <p class="ds-empty">Empty</p>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-hash" style="display:none;">
+        <div class="ds-header">
+          <h3>Hash Table <span class="ds-complexity">O(1) avg lookup</span></h3>
+          <span class="ds-info">Separate chaining — 53 buckets (djb2)</span>
+        </div>
+        <div id="hash-view" class="ds-view">
+          <p class="ds-empty">No entries yet</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+      <p>Built with <strong>C</strong> + <strong>Emscripten WebAssembly</strong> · DSA Project by <strong>Sarvesh M</strong></p>
+    </footer>
+  </div>
+
+  <!-- Emscripten Module config MUST come before snte.js -->
+  <script>
+    var Module = {
+      onRuntimeInitialized: function() {
+        if (window.onWasmReady) window.onWasmReady();
+      }
+    };
+  </script>
+  <script src="snte.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
